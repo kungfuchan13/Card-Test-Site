@@ -1,44 +1,103 @@
 <head>
 	<script src="https://s3.amazonaws.com/stitch-sdks/js/library/stable/stitch.min.js"></script>
 	<script>
-		const client = new stitch.StitchClient('card-game-test-wudbg');
-		const db = client.service('mongodb', 'mongodb-atlas').db('blog');
+	const client = new stitch.StitchClient('card-game-test-wudbg');
+	const cards = client.service('mongodb', 'mongodb-atlas').db('card-game');
 
-      function displayComments() {
-        db.collection('comments').find({}).then(docs => {
-          var html = docs.map(c => "<div>" + c.comment + "</div>").join("");
-          document.getElementById("comments").innerHTML = html;
-        });
-      }
+	function displayCards() {
+		cards.collection('card-types').find({}).then(docs => {
+			var html = docs.map(c => "<div style='display: inline-block; border: 1px solid black; margin: 10px; padding: 10px; width: 175px; height: 250px; overflow-y: scroll; overflow-x: hidden; white-space: normal;'><b>" + c.name +
+				"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + c.rarity +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Element ~ " + c.element +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + c.attack +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + c.defence +
+				"<br><i>" + c.description + "</i></div>").join("");
+			document.getElementById("cards").innerHTML = html;
+		});
+	}
 
-      function displayCommentsOnLoad() {
-        client.login().then(displayComments)
-      }
+	function addCard() {
+		var name = document.getElementById("newCardName");
+		var rarity = document.getElementById("newCardRarity");
+		var element = document.getElementById("newCardElement");
+		var attack = document.getElementById("newCardAttack");
+		var defence = document.getElementById("newCardDefence");
+		var description = document.getElementById("newCardDescription");
+		try { cards.collection("card-types").updateOne({"name": name.value},
+			{ $set: {name: name.value, rarity: rarity.value, element: element.value, attack: attack.value, defence: defence.value, description: description.value} },
+			{upsert: true})
+			.then(displayCards); }
+		catch (e) {document.getElementById("cards").innerHTML = e;}
+	}
 
-      function addComment() {
-        var c = document.getElementById("new_comment");
-        db.collection("comments").insert({owner_id : client.authedId(),
-                                          comment: c.value})
-          .then(displayComments);
-        c.value = "";
-      }
+	function fillCardFields() {
+		var name = document.getElementById("newCardName");
+		var rarity = document.getElementById("newCardRarity");
+		var element = document.getElementById("newCardElement");
+		var attack = document.getElementById("newCardAttack");
+		var defence = document.getElementById("newCardDefence");
+		var description = document.getElementById("newCardDescription");
+		try { cards.collection("card-types").find({name: name.value}).then(docs => {
+			docs.map(card => {
+			name.value = card.name;
+			rarity.value = card.rarity;
+			element.value = card.element;
+			attack.value = card.attack;
+			defence.value = card.defence;
+			description.value = card.description;
+		})}) }
+		catch (e) {document.getElementById("cards").innerHTML = e;}
+	}
+
+	function deleteCardEntry() {
+		var name = document.getElementById("newCardName");
+		try { cards.collection("card-types").deleteOne({name: name.value}).then(displayCards); }
+		catch (e) {document.getElementById("cards").innerHTML = e;}
+	}
 	</script>
 </head>
 
 <html>
-  <body onload="displayCommentsOnLoad()">
-    <h3>Aspirational blog post</h3>
-    <div id="content">
-      I like to write about technology, because I want to get
-      on the front page of hacker news (in a good way).
-    </div>
-    <hr>
-    <div id="comments"></div>
-    <hr>
-    Add comment:
-    <input id="new_comment"><input type="submit" onClick="addComment()">
-  </body>
-<!--Coins:&nbsp;
+<body onload="client.login().then(displayCards);">
+
+Toggle Card Creation Menu: <input type="checkbox" onclick="
+	if (this.checked) document.getElementById('cardCreationMenu').style.display = 'block';
+	else document.getElementById('cardCreationMenu').style.display = 'none';">
+
+<div id="cardCreationMenu" style="border: 1px solid black; padding: 10px; display: none;">
+Name: <input id="newCardName"> <input type="button" value="Search" onclick="fillCardFields();"><br>
+Rarity: <select id="newCardRarity">
+		<option value="C">Common</option>
+		<option value="U">Uncommon</option>
+		<option value="R">Rare</option>
+		<option value="SR">Super Rare</option>
+		<option value="UR">Ultra Rare</option>
+	</select><br>
+Element: <select id="newCardElement">
+		<option value="Neutral">Neutral</option>
+		<option value="Fire">Fire</option>
+		<option value="Water">Water</option>
+		<option value="Grass">Grass</option>
+		<option value="Light">Light</option>
+		<option value="Dark">Dark</option>
+	</select><br>
+Attack: <input id="newCardAttack"><br>
+Defence: <input id="newCardDefence"><br>
+Description:<br>
+<textarea id="newCardDescription"></textarea><br>
+<input type="button" value="Add/Modify" onclick="addCard();">
+<input type="button" value="Remove" onblur="this.value='Remove';" onclick="
+	if (this.value=='Remove') this.value='Are you sure?';
+	else {
+		this.value='Remove';
+		deleteCardEntry();
+	}">
+
+<div id="cards" style="width:50%; border: 5px solid purple; padding: 10px; overflow-x: scroll; white-space: nowrap;"></div>
+</div><br>
+<br>
+
+Coins:&nbsp;
 <select id="coinCount">
 <option value="0">0</option>
 <option value="1">1</option>
@@ -117,9 +176,7 @@ Free Crystals: <input value = "0"><br>
 <div id="p2PlayArea" style="border: 5px solid purple; padding: 10px;"></div>
 </div>
 
-
-
-<div id="a"></div>-->
+</body>
 </html>
 
 <script>
