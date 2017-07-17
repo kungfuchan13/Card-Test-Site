@@ -1,0 +1,141 @@
+<head>
+	<script src="https://s3.amazonaws.com/stitch-sdks/js/library/stable/stitch.min.js"></script>
+	<script>
+	const client = new stitch.StitchClient('card-game-test-wudbg');
+	const cardGame = client.service('mongodb', 'mongodb-atlas').db('card-game');
+
+	function displayCards() {
+		cardGame.collection('card-types').find({}).then(docs => {
+			var html = docs.map(c => "<div class='card'><b>" + c.name +
+				"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>" + c.cardType + "</i>" +
+			//Only display description if it is some sort of event card.
+				((c.cardType!='Event'&&c.cardType!='Release Event')?(
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + c.rarity +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Element ~ " + c.element +
+			//Only display attack/defence/soul if it is a character card.
+				((c.cardType!='Upgrade Material')?(
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + c.attack +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + c.defence +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Soul ~ " + c.soul):(""))):("")) +
+				"<br><i>" + c.description + "</i></div>").join("");
+			document.getElementById("cards").innerHTML = html;
+		});
+	}
+
+	function addCard() {
+		var name = document.getElementById("newCardName");
+		var cardType = document.getElementById("newCardType");
+		var rarity = document.getElementById("newCardRarity");
+		var element = document.getElementById("newCardElement");
+		var attack = document.getElementById("newCardAttack");
+		var defence = document.getElementById("newCardDefence");
+		var soul = document.getElementById("newCardSoul");
+		var description = document.getElementById("newCardDescription");
+		try { cardGame.collection("card-types").updateOne({"name": name.value},
+			{ $set: {name: name.value, cardType: cardType.value, rarity: rarity.value, element: element.value, attack: attack.value, defence: defence.value, soul: soul.value, description: description.value} },
+			{upsert: true})
+			.then(displayCards); }
+		catch (e) {document.getElementById("cards").innerHTML = e;}
+	}
+
+	function fillCardFields() {
+		var name = document.getElementById("newCardName");
+		var cardType = document.getElementById("newCardType");
+		var rarity = document.getElementById("newCardRarity");
+		var element = document.getElementById("newCardElement");
+		var attack = document.getElementById("newCardAttack");
+		var defence = document.getElementById("newCardDefence");
+		var soul = document.getElementById("newCardSoul");
+		var description = document.getElementById("newCardDescription");
+		try { cardGame.collection("card-types").find({name: name.value}).then(docs => {
+			docs.map(card => {
+			name.value = card.name;
+			cardType.value = card.cardType;
+			rarity.value = card.rarity;
+			element.value = card.element;
+			attack.value = card.attack;
+			defence.value = card.defence;
+			soul.value = card.soul;
+			description.value = card.description;
+		})}) }
+		catch (e) {document.getElementById("cards").innerHTML = e;}
+	}
+
+	function deleteCardEntry() {
+		var name = document.getElementById("newCardName");
+		try { cardGame.collection("card-types").deleteOne({name: name.value}).then(displayCards); }
+		catch (e) {document.getElementById("cards").innerHTML = e;}
+	}
+	</script>
+
+
+
+	<style>
+	div.card {
+		display: inline-block;
+		border: 1px solid black;
+		margin: 10px;
+		padding: 10px;
+		width: 175px;
+		height: 250px;
+		overflow-y: scroll;
+		overflow-x: hidden;
+		white-space: normal;
+	}
+	</style>
+</head>
+
+<html>
+<body onload="client.login().then(displayCards);">
+
+Toggle Card Creation Menu: <input type="checkbox" onclick="
+	if (this.checked) document.getElementById('cardCreationMenu').style.display = 'block';
+	else document.getElementById('cardCreationMenu').style.display = 'none';">
+
+<div id="cardCreationMenu" style="border: 1px solid black; padding: 10px; display: none;">
+Name: <input id="newCardName"> <input type="button" value="Search" onclick="fillCardFields();"><br>
+Card Type: <select id="newCardType">
+		<option value="Character">Character</option>
+		<option value="Event">Event</option>
+		<option value="Upgrade Material">Upgrade Material</option>
+		<option value="Release Event">Release Event</option>
+		<option value="Gacha Character">Gacha Character</option>
+	</select><br>
+Rarity: <select id="newCardRarity">
+		<option value="C">Common</option>
+		<option value="U">Uncommon</option>
+		<option value="R">Rare</option>
+		<option value="SR">Super Rare</option>
+		<option value="UR">Ultra Rare</option>
+		<option value="N/A">N/A</option>
+	</select><br>
+Element: <select id="newCardElement">
+		<option value="Neutral">Neutral</option>
+		<option value="Fire">Fire</option>
+		<option value="Water">Water</option>
+		<option value="Grass">Grass</option>
+		<option value="Light">Light</option>
+		<option value="Dark">Dark</option>
+	</select><br>
+Attack: <input id="newCardAttack"><br>
+Defence: <input id="newCardDefence"><br>
+Soul: <select id="newCardSoul">
+		<option value="0">0</option>
+		<option value="1">1</option>
+		<option value="2">2</option>
+	</select><br>
+Description:<br>
+<textarea id="newCardDescription"></textarea><br>
+<input type="button" value="Add/Modify" onclick="addCard();">
+<input type="button" value="Remove" onblur="this.value='Remove';" onclick="
+	if (this.value=='Remove') this.value='Are you sure?';
+	else {
+		this.value='Remove';
+		deleteCardEntry();
+	}">
+
+<div id="cards" style="width:50%; border: 5px solid purple; padding: 10px; overflow-x: scroll; white-space: nowrap;"></div>
+</div>
+
+</body>
+</html>
