@@ -71,6 +71,7 @@
 
 <html>
 <body onload="client.login().then(displayCards);">
+<input type="button" value="Login" onclick="client.login().then(displayCards);">
 
 Toggle Card Creation Menu: <input type="checkbox" onclick="
 	if (this.checked) document.getElementById('cardCreationMenu').style.display = 'block';
