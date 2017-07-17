@@ -2,15 +2,21 @@
 	<script src="https://s3.amazonaws.com/stitch-sdks/js/library/stable/stitch.min.js"></script>
 	<script>
 	const client = new stitch.StitchClient('card-game-test-wudbg');
-	const cards = client.service('mongodb', 'mongodb-atlas').db('card-game');
+	const cardGame = client.service('mongodb', 'mongodb-atlas').db('card-game');
 
 	function displayCards() {
-		cards.collection('card-types').find({}).then(docs => {
+		cardGame.collection('card-types').find({}).then(docs => {
 			var html = docs.map(c => "<div style='display: inline-block; border: 1px solid black; margin: 10px; padding: 10px; width: 175px; height: 250px; overflow-y: scroll; overflow-x: hidden; white-space: normal;'><b>" + c.name +
-				"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + c.rarity +
+				"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>" + c.cardType + "</i>" +
+			//Only display description if it is some sort of event card.
+				((c.cardType!='Event'&&c.cardType!='Release Event')?(
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + c.rarity +
 				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Element ~ " + c.element +
+			//Only display attack/defence/soul if it is a character card.
+				((c.cardType!='Upgrade Material')?(
 				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + c.attack +
 				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + c.defence +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Soul ~ " + c.soul):(""))):("")) +
 				"<br><i>" + c.description + "</i></div>").join("");
 			document.getElementById("cards").innerHTML = html;
 		});
@@ -18,13 +24,15 @@
 
 	function addCard() {
 		var name = document.getElementById("newCardName");
+		var cardType = document.getElementById("newCardType");
 		var rarity = document.getElementById("newCardRarity");
 		var element = document.getElementById("newCardElement");
 		var attack = document.getElementById("newCardAttack");
 		var defence = document.getElementById("newCardDefence");
+		var soul = document.getElementById("newCardSoul");
 		var description = document.getElementById("newCardDescription");
-		try { cards.collection("card-types").updateOne({"name": name.value},
-			{ $set: {name: name.value, rarity: rarity.value, element: element.value, attack: attack.value, defence: defence.value, description: description.value} },
+		try { cardGame.collection("card-types").updateOne({"name": name.value},
+			{ $set: {name: name.value, cardType: cardType.value, rarity: rarity.value, element: element.value, attack: attack.value, defence: defence.value, soul: soul.value, description: description.value} },
 			{upsert: true})
 			.then(displayCards); }
 		catch (e) {document.getElementById("cards").innerHTML = e;}
@@ -32,18 +40,22 @@
 
 	function fillCardFields() {
 		var name = document.getElementById("newCardName");
+		var cardType = document.getElementById("newCardType");
 		var rarity = document.getElementById("newCardRarity");
 		var element = document.getElementById("newCardElement");
 		var attack = document.getElementById("newCardAttack");
 		var defence = document.getElementById("newCardDefence");
+		var soul = document.getElementById("newCardSoul");
 		var description = document.getElementById("newCardDescription");
-		try { cards.collection("card-types").find({name: name.value}).then(docs => {
+		try { cardGame.collection("card-types").find({name: name.value}).then(docs => {
 			docs.map(card => {
 			name.value = card.name;
+			cardType.value = card.cardType;
 			rarity.value = card.rarity;
 			element.value = card.element;
 			attack.value = card.attack;
 			defence.value = card.defence;
+			soul.value = card.soul;
 			description.value = card.description;
 		})}) }
 		catch (e) {document.getElementById("cards").innerHTML = e;}
@@ -51,7 +63,7 @@
 
 	function deleteCardEntry() {
 		var name = document.getElementById("newCardName");
-		try { cards.collection("card-types").deleteOne({name: name.value}).then(displayCards); }
+		try { cardGame.collection("card-types").deleteOne({name: name.value}).then(displayCards); }
 		catch (e) {document.getElementById("cards").innerHTML = e;}
 	}
 	</script>
@@ -66,12 +78,20 @@ Toggle Card Creation Menu: <input type="checkbox" onclick="
 
 <div id="cardCreationMenu" style="border: 1px solid black; padding: 10px; display: none;">
 Name: <input id="newCardName"> <input type="button" value="Search" onclick="fillCardFields();"><br>
+Card Type: <select id="newCardType">
+		<option value="Character">Character</option>
+		<option value="Event">Event</option>
+		<option value="Upgrade Material">Upgrade Material</option>
+		<option value="Release Event">Release Event</option>
+		<option value="Gacha Character">Gacha Character</option>
+	</select><br>
 Rarity: <select id="newCardRarity">
 		<option value="C">Common</option>
 		<option value="U">Uncommon</option>
 		<option value="R">Rare</option>
 		<option value="SR">Super Rare</option>
 		<option value="UR">Ultra Rare</option>
+		<option value="N/A">N/A</option>
 	</select><br>
 Element: <select id="newCardElement">
 		<option value="Neutral">Neutral</option>
@@ -83,6 +103,11 @@ Element: <select id="newCardElement">
 	</select><br>
 Attack: <input id="newCardAttack"><br>
 Defence: <input id="newCardDefence"><br>
+Soul: <select id="newCardSoul">
+		<option value="0">0</option>
+		<option value="1">1</option>
+		<option value="2">2</option>
+	</select><br>
 Description:<br>
 <textarea id="newCardDescription"></textarea><br>
 <input type="button" value="Add/Modify" onclick="addCard();">
@@ -110,12 +135,12 @@ Coins:&nbsp;
 <div id="flipResult"></div><br>
 <br>
 
-<!--
+
 <font size="5"><div id="header"></div></font><br>
 Action: <select id="actionSelect"></select><br>
 <input type="button" value="Next Phase" onclick="game.nextPhase();">
 <br>
--->
+
 
 
 <div style="width: 600px; float: left;">
@@ -401,10 +426,10 @@ var actionSelect = document.getElementById("actionSelect");
 gametype.prototype.setPhase = function() {
 	header.innerHTML = "Player ~ " + this.players[this.currentPlayer].name + "<br>Current Phase: " + this.phases[this.currentPhase];
 
-	actionSelect.innerHTML = "";
+	/*actionSelect.innerHTML = "";
 	for (var i = 0; i < this.actions[this.currentPhase].length; i++) {
 		actionSelect.innerHTML += "<option value='" + this.actions[this.currentPhase][i] + "'>" + this.actions[this.currentPhase][i] + "</option>";
-	}
+	}*/
 };
 
 gametype.prototype.nextPhase = function() {
@@ -420,7 +445,7 @@ gametype.prototype.nextPhase = function() {
 
 
 //Testing Functionality
-var game = new gametype(["Draw", "Stand", "Clock", "Main", "Climax", "Attack", "End"], [["Draw"], [], ["Clock"], ["Play", "Move"], ["Climax"], ["Attack"], []]);
+var game = new gametype(["Event", "Recharge", "Roll", "Main", "Attack", "Upgrade", "End"], [["Draw"], [], ["Clock"], ["Play", "Move"], ["Climax"], ["Attack"], []]);
 
 //C 3, U 4, R 5, SR 7, UR 9
 
@@ -491,10 +516,10 @@ p2.memory.push(SternTheDestructorCard);
 p2.memory.push(SternTheDestructorCard);
 p2.play.push(StartDashCard);
 
-//game.players.push(p1);
-//game.players.push(p2);
+game.players.push(p1);
+game.players.push(p2);
 
-//game.setPhase();
+game.setPhase();
 
 function format(field) {
 	var text = "";
