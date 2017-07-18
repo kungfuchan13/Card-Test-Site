@@ -3,21 +3,25 @@
 	<script>
 	const client = new stitch.StitchClient('card-game-test-wudbg');
 	const cardGame = client.service('mongodb', 'mongodb-atlas').db('card-game');
+		
+	function cardDiv(name, cardType, rarity, element, attack, defence, soul, description) {
+		return "<div class='card'><b>" + name +
+				"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>" + cardType + "</i>" +
+			//Only display description if it is some sort of event card.
+				((cardType!='Event'&&cardType!='Release Event')?(
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + rarity +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Element ~ " + element +
+			//Only display attack/defence/soul if it is a character card.
+				((cardType!='Upgrade Material')?(
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + attack +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + defence +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Soul ~ " + soul):(""))):("")) +
+				"<br><i>" + description + "</i></div>"
+	}
 
 	function displayCards() {
 		cardGame.collection('card-types').find({}).then(docs => {
-			var html = docs.map(c => "<div class='card'><b>" + c.name +
-				"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>" + c.cardType + "</i>" +
-			//Only display description if it is some sort of event card.
-				((c.cardType!='Event'&&c.cardType!='Release Event')?(
-				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + c.rarity +
-				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Element ~ " + c.element +
-			//Only display attack/defence/soul if it is a character card.
-				((c.cardType!='Upgrade Material')?(
-				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + c.attack +
-				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + c.defence +
-				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Soul ~ " + c.soul):(""))):("")) +
-				"<br><i>" + c.description + "</i></div>").join("");
+			var html = docs.map(c => cardDiv(c.name, c.cardType, c.rarity, c.element, c.attack, c.defence, c.soul, c.description)).join("");
 			document.getElementById("cards").innerHTML = html;
 		});
 	}
@@ -134,7 +138,7 @@ Description:<br>
 		deleteCardEntry();
 	}">
 
-<div id="cards" style="width:50%; border: 5px solid purple; padding: 10px; overflow-x: scroll; white-space: nowrap;"></div>
+<div id="cards" style="border: 5px solid purple; padding: 10px; overflow-x: scroll; white-space: nowrap;"></div>
 </div>
 
 </body>
