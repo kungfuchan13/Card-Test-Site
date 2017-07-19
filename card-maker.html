@@ -170,7 +170,7 @@
 	function fillDeckList() {
 		var list = document.getElementById("deckList");
 		cardGame.collection('decks').find({}).then(docs => {
-			var html = docs.map(d => "<div>" + d.name + "</div>").join("");
+			var html = docs.map(d => "<div onclick='document.getElementById("+'"deckName"'+").value=this.innerHTML;' onmouseover='this.style.backgroundColor="+'"#aaa"'+";'onmouseout='this.style.backgroundColor="+'"#fff"'+";'>" + d.name + "</div>").join("");
 			document.getElementById("deckList").innerHTML = html;
 		});
 	}
