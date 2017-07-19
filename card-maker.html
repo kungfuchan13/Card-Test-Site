@@ -147,7 +147,7 @@
 
 			deckArea.innerHTML += html;
 		}
-		document.getElementById("cardCount").innerHTML = "Cards in Current Deck: " + curDeck.length + " (" + starter.length + " Starters)";
+		document.getElementById("cardCount").innerHTML = "Cards in Current Deck: " + (curDeck.length+starter.length) + " (" + starter.length + " Starters)";
 	}
 
 	function addToDeck(cardName) {
