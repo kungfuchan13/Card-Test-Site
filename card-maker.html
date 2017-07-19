@@ -101,6 +101,7 @@
 
 
 	var curDeck = [];
+	var starter = [];
 	var selectCardIndex = -1;
 
 	function deckSorting(a, b) {
@@ -110,11 +111,17 @@
 	}
 
 	function showDeck() {
+		var selectStarter = document.getElementById("selectStarter");
 		curDeck.sort(deckSorting);
 		var deckArea = document.getElementById("deck");
 		deckArea.innerHTML = "";
-		for (var i = 0; i < curDeck.length; i++) {
-			var card = curDeck[i];
+		var tempDeck = [];
+		if (selectStarter.checked)
+			tempDeck = starter;
+		else
+			tempDeck = curDeck;
+		for (var i = 0; i < tempDeck.length; i++) {
+			var card = tempDeck[i];
 			var name = card.name;
 			var cardType = card.type;
 			var rarity = card.rarity;
@@ -140,12 +147,17 @@
 
 			deckArea.innerHTML += html;
 		}
+		document.getElementById("cardCount").innerHTML = "Cards in Current Deck: " + curDeck.length + " (" + starter.length + " Starters)";
 	}
 
 	function addToDeck(cardName) {
+		var selectStarter = document.getElementById("selectStarter");
 		try { cardGame.collection("card-types").find({name: cardName}).then(docs => {
 			docs.map(c => {
-				curDeck.push(new card(c.name, c.cardType, c.rarity, c.element, c.attack, c.defence, c.soul, c.description));
+				if (selectStarter.checked)
+					starter.push(new card(c.name, c.cardType, c.rarity, c.element, c.attack, c.defence, c.soul, c.description));
+				else
+					curDeck.push(new card(c.name, c.cardType, c.rarity, c.element, c.attack, c.defence, c.soul, c.description));
 		})}).then(showDeck) }
 		catch (e) {document.getElementById("deckName").value = e;}
 	}
@@ -166,7 +178,7 @@
 	function addDeck() {
 		var deck = document.getElementById("deckName");
 		try { cardGame.collection("decks").updateOne({"name": deck.value},
-			{ $set: {name: deck.value, cards: curDeck} },
+			{ $set: {name: deck.value, cards: curDeck, starter: starter} },
 			{upsert: true}).then(fillDeckList); }
 		catch (e) {document.getElementById("deckName").value = e;}
 	}
@@ -176,6 +188,7 @@
 		try { cardGame.collection("decks").find({name: deck.value}).then(docs => {
 			docs.map(d => {
 				curDeck = d.cards;
+				starter = d.starter;
 		})}).then(showDeck) }
 		catch (e) {document.getElementById("deckName").value = e;}
 	}
@@ -267,7 +280,11 @@ Description:<br>
 		this.value='Remove';
 		removeDeck();
 	}"><br>
+<br>
+Deck List:<br>
 <div id="deckList" style="border: 1px solid purple;"></div><br>
+Toggle Starter Card Selection: <input id="selectStarter" type="checkbox" onclick="showDeck();"><br>
+<div id="cardCount">Cards in Current Deck: 0 (0 Starters)</div>
 <div id="cardList" style="border: 5px ridge gold; padding: 10px; width: 660px; overflow-y: scroll; float: left;"></div>
 <div id="deck" style="border: 5px ridge purple; padding: 10px; width: 660px; overflow-y: scroll; float: left;"></div>
 
