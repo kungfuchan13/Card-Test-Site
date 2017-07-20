@@ -27,8 +27,7 @@
 <html>
 <body onload="client.login();">
 
-<!-- PLAYER MANAGEMENT WINDOW -->
-
+<div style="width: 1420px; border: 1px solid white;">
 <div style="float: right;">
 Player Name:<br><input id="playerName"><br>
 Deck Name:<br><input id="deckName"><br>
@@ -55,6 +54,17 @@ Opponent Name:<br><input id="opponentName"><br>
 		loadPlayer(p2);
 		setOpponentPlayField();
 	}"><br>
+</div></div>
+
+<!-- PLAYER MANAGEMENT WINDOW -->
+
+<div style="position: fixed; right: 155px;">
+	Paid Crystals:<br>
+	<input value="20" onblur="p1.pcry = this.value; updatePlayer();"><br>
+	Free Crystals:<br>
+	<input value="0" onblur="p1.fcry = this.value; updatePlayer();"><br>
+	<div id="epcry">Opponent's Paid<br>&nbsp;&nbsp;&nbsp;&nbsp;Crystals: </div>
+	<div id="efcry">Opponent's Free<br>&nbsp;&nbsp;&nbsp;&nbsp;Crystals: </div>
 </div>
 
 <!-- COINS AND CHAT/LOG -->
@@ -81,15 +91,6 @@ Coins:&nbsp;
 		clearMessages();
 	}">
 
-</div>
-
-<div style="position: fixed; left: 1150px; z-index: 1;">
-	Paid Crystals:<br>
-	<input value="20" onblur="p1.pcry = this.value; updatePlayer();"><br>
-	Free Crystals:<br>
-	<input value="0" onblur="p1.fcry = this.value; updatePlayer();"><br>
-	<div id="epcry">Opponent's Paid<br>&nbsp;&nbsp;&nbsp;&nbsp;Crystals: </div>
-	<div id="efcry">Opponent's Free<br>&nbsp;&nbsp;&nbsp;&nbsp;Crystals: </div>
 </div>
 
 <!-- PLAY MAT HERE -->
