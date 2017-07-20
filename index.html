@@ -411,7 +411,7 @@ function initializePlayer() {
 		p1.deck = deck.cards;
 		p1.hand = deck.starter;
 	})}).then(setInitFields);
-	updatePlayer();
+	setTimeout(updatePlayer, 750);
 	}
 	catch (e) {document.getElementById("playerName").value = e;}
 
