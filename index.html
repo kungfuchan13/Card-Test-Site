@@ -397,6 +397,15 @@ function initializePlayer() {
 	var player = document.getElementById("playerName");
 	var deck = document.getElementById("deckName");
 	p1.name = player.value;
+	p1.discPile = [];
+	p1.pa1 = [];
+	p1.pa2 = [];
+	p1.pa3 = [];
+	p1.pa4 = [];
+	p1.pa5 = [];
+	p1.pa6 = [];
+	p1.event = [];
+	p1.memory = [];
 	try { cardGame.collection("decks").find({name: deck.value}).then(docs => {
 		docs.map(deck => {
 		p1.deck = deck.cards;
