@@ -28,6 +28,9 @@
 <body onload="client.login();">
 
 <div style="width: 1420px; border: 1px solid white;">
+
+<!-- PLAYER MANAGEMENT WINDOW -->
+
 <div style="float: right;">
 Player Name:<br><input id="playerName"><br>
 Deck Name:<br><input id="deckName"><br>
@@ -44,6 +47,7 @@ Deck Name:<br><input id="deckName"><br>
 		p1.name = document.getElementById('playerName').value;
 		loadPlayer(p1);
 		setTimeout(refreshFields, 750);
+		setTimeout(function() {document.getElementById('pcry').value = p1.pcry; document.getElementById('fcry').value = p1.fcry;}, 750);
 	}"><br>
 Opponent Name:<br><input id="opponentName"><br>
 <input type="button" value="Load" onblur="this.value='Load';" onclick="
@@ -56,13 +60,13 @@ Opponent Name:<br><input id="opponentName"><br>
 	}"><br>
 </div></div>
 
-<!-- PLAYER MANAGEMENT WINDOW -->
+<!-- Crystal Management Window -->
 
 <div style="position: fixed; right: 155px;">
 	Paid Crystals:<br>
-	<input value="20" onblur="p1.pcry = this.value; updatePlayer();"><br>
+	<input id="pcry" value="20" onblur="p1.pcry = this.value; updatePlayer();"><br>
 	Free Crystals:<br>
-	<input value="0" onblur="p1.fcry = this.value; updatePlayer();"><br>
+	<input id="fcry" value="0" onblur="p1.fcry = this.value; updatePlayer();"><br>
 	<div id="epcry">Opponent's Paid<br>&nbsp;&nbsp;&nbsp;&nbsp;Crystals: </div>
 	<div id="efcry">Opponent's Free<br>&nbsp;&nbsp;&nbsp;&nbsp;Crystals: </div>
 </div>
