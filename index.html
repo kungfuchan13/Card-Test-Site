@@ -4,125 +4,62 @@
 	const client = new stitch.StitchClient('card-game-test-wudbg');
 	const cardGame = client.service('mongodb', 'mongodb-atlas').db('card-game');
 
-	function displayCards() {
-		cardGame.collection('card-types').find({}).then(docs => {
-			var html = docs.map(c => "<div style='display: inline-block; border: 1px solid black; margin: 10px; padding: 10px; width: 175px; height: 250px; overflow-y: scroll; overflow-x: hidden; white-space: normal;'><b>" + c.name +
-				"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>" + c.cardType + "</i>" +
-			//Only display description if it is some sort of event card.
-				((c.cardType!='Event'&&c.cardType!='Release Event')?(
-				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + c.rarity +
-				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Element ~ " + c.element +
-			//Only display attack/defence/soul if it is a character card.
-				((c.cardType!='Upgrade Material')?(
-				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + c.attack +
-				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + c.defence +
-				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Soul ~ " + c.soul):(""))):("")) +
-				"<br><i>" + c.description + "</i></div>").join("");
-			document.getElementById("cards").innerHTML = html;
-		});
-	}
-
-	function addCard() {
-		var name = document.getElementById("newCardName");
-		var cardType = document.getElementById("newCardType");
-		var rarity = document.getElementById("newCardRarity");
-		var element = document.getElementById("newCardElement");
-		var attack = document.getElementById("newCardAttack");
-		var defence = document.getElementById("newCardDefence");
-		var soul = document.getElementById("newCardSoul");
-		var description = document.getElementById("newCardDescription");
-		try { cardGame.collection("card-types").updateOne({"name": name.value},
-			{ $set: {name: name.value, cardType: cardType.value, rarity: rarity.value, element: element.value, attack: attack.value, defence: defence.value, soul: soul.value, description: description.value} },
-			{upsert: true})
-			.then(displayCards); }
-		catch (e) {document.getElementById("cards").innerHTML = e;}
-	}
-
-	function fillCardFields() {
-		var name = document.getElementById("newCardName");
-		var cardType = document.getElementById("newCardType");
-		var rarity = document.getElementById("newCardRarity");
-		var element = document.getElementById("newCardElement");
-		var attack = document.getElementById("newCardAttack");
-		var defence = document.getElementById("newCardDefence");
-		var soul = document.getElementById("newCardSoul");
-		var description = document.getElementById("newCardDescription");
-		try { cardGame.collection("card-types").find({name: name.value}).then(docs => {
-			docs.map(card => {
-			name.value = card.name;
-			cardType.value = card.cardType;
-			rarity.value = card.rarity;
-			element.value = card.element;
-			attack.value = card.attack;
-			defence.value = card.defence;
-			soul.value = card.soul;
-			description.value = card.description;
-		})}) }
-		catch (e) {document.getElementById("cards").innerHTML = e;}
-	}
-
-	function deleteCardEntry() {
-		var name = document.getElementById("newCardName");
-		try { cardGame.collection("card-types").deleteOne({name: name.value}).then(displayCards); }
-		catch (e) {document.getElementById("cards").innerHTML = e;}
-	}
 	</script>
+
+
+
+	<style>
+	div.card {
+		display: inline-block;
+		border: 1px solid black;
+		margin: 10px;
+		padding: 10px;
+		width: 105px;
+		height: 150px;
+		overflow-y: scroll;
+		overflow-x: hidden;
+		white-space: normal;
+		text-align: left;
+	}
+	</style>
 </head>
 
 <html>
-<body onload="client.login().then(displayCards);">
-<input type="button" value="Login" onclick="client.login().then(displayCards);">
+<body onload="client.login();">
 
-Toggle Card Creation Menu: <input type="checkbox" onclick="
-	if (this.checked) document.getElementById('cardCreationMenu').style.display = 'block';
-	else document.getElementById('cardCreationMenu').style.display = 'none';">
+<!-- PLAYER MANAGEMENT WINDOW -->
 
-<div id="cardCreationMenu" style="border: 1px solid black; padding: 10px; display: none;">
-Name: <input id="newCardName"> <input type="button" value="Search" onclick="fillCardFields();"><br>
-Card Type: <select id="newCardType">
-		<option value="Character">Character</option>
-		<option value="Event">Event</option>
-		<option value="Upgrade Material">Upgrade Material</option>
-		<option value="Release Event">Release Event</option>
-		<option value="Gacha Character">Gacha Character</option>
-	</select><br>
-Rarity: <select id="newCardRarity">
-		<option value="C">Common</option>
-		<option value="U">Uncommon</option>
-		<option value="R">Rare</option>
-		<option value="SR">Super Rare</option>
-		<option value="UR">Ultra Rare</option>
-		<option value="N/A">N/A</option>
-	</select><br>
-Element: <select id="newCardElement">
-		<option value="Neutral">Neutral</option>
-		<option value="Fire">Fire</option>
-		<option value="Water">Water</option>
-		<option value="Grass">Grass</option>
-		<option value="Light">Light</option>
-		<option value="Dark">Dark</option>
-	</select><br>
-Attack: <input id="newCardAttack"><br>
-Defence: <input id="newCardDefence"><br>
-Soul: <select id="newCardSoul">
-		<option value="0">0</option>
-		<option value="1">1</option>
-		<option value="2">2</option>
-	</select><br>
-Description:<br>
-<textarea id="newCardDescription"></textarea><br>
-<input type="button" value="Add/Modify" onclick="addCard();">
-<input type="button" value="Remove" onblur="this.value='Remove';" onclick="
-	if (this.value=='Remove') this.value='Are you sure?';
+<div style="float: right;">
+Player Name:<br><input id="playerName"><br>
+Deck Name:<br><input id="deckName"><br>
+<input type="button" value="Initialize" onblur="this.value='Initialize';" onclick="
+	if (this.value=='Initialize') this.value='Are you sure?';
 	else {
-		this.value='Remove';
-		deleteCardEntry();
-	}">
+		this.value='Initialize';
+		initializePlayer();
+	}"><br>
+<input type="button" value="Load" onblur="this.value='Load';" onclick="
+	if (this.value=='Load') this.value='Are you sure?';
+	else {
+		this.value='Load';
+		p1.name = document.getElementById('playerName').value;
+		loadPlayer(p1);
+		setTimeout(refreshFields, 750);
+	}"><br>
+Opponent Name:<br><input id="opponentName"><br>
+<input type="button" value="Load" onblur="this.value='Load';" onclick="
+	if (this.value=='Load') this.value='Are you sure?';
+	else {
+		this.value='Load';
+		p2.name = document.getElementById('opponentName').value;
+		loadPlayer(p2);
+		setOpponentPlayField();
+	}"><br>
+</div>
 
-<div id="cards" style="width:50%; border: 5px solid purple; padding: 10px; overflow-x: scroll; white-space: nowrap;"></div>
-</div><br>
-<br>
+<!-- COINS AND CHAT/LOG -->
 
+<div style="position: fixed; top: 10px;; left: 10px; height: 100%;">
 Coins:&nbsp;
 <select id="coinCount">
 <option value="0">0</option>
@@ -134,166 +71,358 @@ Coins:&nbsp;
 </select><br>
 <input type="button" value="Flip Coins" onclick="flipCoins();">
 <div id="flipResult"></div><br>
-<br>
 
-
-<font size="5"><div id="header"></div></font><br>
-Action: <select id="actionSelect"></select><br>
-<input type="button" value="Next Phase" onclick="game.nextPhase();">
-<br>
-
-
-
-<div style="width: 600px; float: left;">
-<b>PLAYER 1</b><br>
-Paid Crystals: <input value="30"><br>
-Free Crystals: <input value = "0"><br>
-<select id="p1Field" onblur="setP1Select();">
-	<option value="hand">Hand</option>
-	<option value="play">Play</option>
-	<option value="deck">Deck</option>
-	<option value="discPile">Discard</option>
-	<option value="memory">Memory</option>
-</select>
-<select id="p1CardSelect"></select>
-<input type="button" value="Draw" onclick="p1.draw(1); setP1Select();">
-<input type="button" value="Show Stats" onclick="p1CardStats();"><br>
-<input type="button" value="Move to Another Field" onclick="p1MoveCard();">
-<select id="p1ToField">
-	<option value="hand">Hand</option>
-	<option value="play">Play</option>
-	<option value="deck">Deck</option>
-	<option value="discPile">Discard</option>
-	<option value="memory">Memory</option>
-</select>
-<input type="button" value="Shuffle" onclick="p1.shuffle(); setP1Select();">
-<input type="button" value="Refresh" onclick="p1.refresh(); setP1Select();">
-<br>
-<div id="p1StatWin" style="border: 1px solid black; padding: 10px;"></div>
-<div id="p1PlayArea" style="border: 5px solid purple; padding: 10px;"></div>
+<div id="chatLog" style="border: 1px solid grey; width: 200px; height: 70%; overflow-y: scroll;"></div>
+<input style="width: 202px; height: 5%; padding: 10px;" onkeydown="if (event.keyCode == 13) { sendMessage(this.value); this.value=''; }"><br>
+<input type="button" value="Clear Chat Log" onblur="this.value='Clear Chat Log';" onclick="
+	if (this.value=='Clear Chat Log') this.value='Are you sure?';
+	else {
+		this.value='Clear Chat Log';
+		clearMessages();
+	}">
 </div>
 
-<div style="width: 600px; float: left;">
-<b>PLAYER 2</b><br>
-Paid Crystals: <input value="30"><br>
-Free Crystals: <input value = "0"><br>
-<select id="p2Field" onblur="setP2Select();">
-	<option value="hand">Hand</option>
-	<option value="play">Play</option>
-	<option value="deck">Deck</option>
-	<option value="discPile">Discard</option>
-	<option value="memory">Memory</option>
-</select>
-<select id="p2CardSelect"></select>
-<input type="button" value="Draw" onclick="p2.draw(1); setP2Select();">
-<input type="button" value="Show Stats" onclick="p2CardStats();"><br>
-<input type="button" value="Move to Another Field" onclick="p2MoveCard()">
-<select id="p2ToField">
-	<option value="hand">Hand</option>
-	<option value="play">Play</option>
-	<option value="deck">Deck</option>
-	<option value="discPile">Discard</option>
-	<option value="memory">Memory</option>
-</select>
-<input type="button" value="Shuffle" onclick="p2.shuffle(); setP2Select();">
-<input type="button" value="Refresh" onclick="p2.refresh(); setP2Select();">
-<br>
-<div id="p2StatWin" style="border: 1px solid black; padding: 10px;"></div>
-<div id="p2PlayArea" style="border: 5px solid purple; padding: 10px;"></div>
+<!-- PLAY MAT HERE -->
+
+<font size="1">
+<div style="width: 100%; text-align: center;">
+<div style="display: inline-block; position: absolute; top: 0px; left: 250px; background-color: grey;">
+
+<!-- ENEMY LEFT SIDE -->
+<div style="border: 5px solid red; padding: 10px; width: 150px; height: 390px; text-align: center; float: left;">
+	<div id="eevent" class="card" style="position: relative; top: 197px;" onclick="selectEnemyArea(this);">Enemy Event</div>
 </div>
+<!-- ENEMY PLAY AREA -->
+<div id="enemyPlay" style="border: 5px solid red; padding: 10px; width: 500px; float: left;">
+	<div id="epa6" class="card" onclick="selectEnemyArea(this);"></div>
+	<div id="epa5" class="card" onclick="selectEnemyArea(this);"></div>
+	<div id="epa4" class="card" onclick="selectEnemyArea(this);"></div>
+	<div id="epa3" class="card" onclick="selectEnemyArea(this);"></div>
+	<div id="epa2" class="card" onclick="selectEnemyArea(this);"></div>
+	<div id="epa1" class="card" onclick="selectEnemyArea(this);"></div>
+</div>
+<!-- Left Side -->
+<div style="border: 5px solid gold; padding: 10px; width: 150px; height: 612px; float: left; text-align: center; clear: left;">
+	<div id="event" class="card" onmouseover="highlightBorder(this);" onmouseout="revertBorder(this);" onmousedown="selectBorder(this);">Event</div>
+	<div id="memory" class="card" onmouseover="highlightBorder(this);" onmouseout="revertBorder(this);" onmousedown="selectBorder(this);">Memory</div>
+</div>
+
+<!-- Middle -->
+<div style="float: left;">
+<div id="play" style="border: 5px solid black; padding: 10px; width: 500px; text-align: center;">
+	<div id="pa1" class="card" onmouseover="highlightBorder(this);" onmouseout="revertBorder(this);" onmousedown="selectBorder(this);"></div>
+	<div id="pa2" class="card" onmouseover="highlightBorder(this);" onmouseout="revertBorder(this);" onmousedown="selectBorder(this);"></div>
+	<div id="pa3" class="card" onmouseover="highlightBorder(this);" onmouseout="revertBorder(this);" onmousedown="selectBorder(this);"></div>
+	<div id="pa4" class="card" onmouseover="highlightBorder(this);" onmouseout="revertBorder(this);" onmousedown="selectBorder(this);"></div>
+	<div id="pa5" class="card" onmouseover="highlightBorder(this);" onmouseout="revertBorder(this);" onmousedown="selectBorder(this);"></div>
+	<div id="pa6" class="card" onmouseover="highlightBorder(this);" onmouseout="revertBorder(this);" onmousedown="selectBorder(this);"></div>
+</div>
+<div id="hand" style="border: 5px solid purple; padding: 10px; width: 500px; height: 192px; overflow-x: scroll; white-space: nowrap;"></div>
+</div>
+
+<!-- Right Side -->
+<div style="border: 5px solid blue; padding: 10px; width: 150px; height: 612px; float: left; text-align: center;">
+	<div id="deck" class="card" onmouseover="highlightBorder(this);" onmouseout="revertBorder(this);" onmousedown="selectBorder(this);">Deck</div>
+	<div id="discPile" class="card" onmouseover="highlightBorder(this);" onmouseout="revertBorder(this);" onmousedown="selectBorder(this);">Discard</div>
+	<input type="button" value="Draw" onclick="p1.draw(1); refreshFields();"><br>
+	<input type="button" value="Shuffle" onclick="p1.shuffle(); refreshFields();"><br>
+	<input type="button" value="Refresh Deck" onclick="p1.refresh(); refreshFields();"><br>
+	<br>
+	<input type="button" value="Move Selected Card to Hand" onclick="
+		if (selectedArea && selectedArea != handArea) selectedArea.style.border = '1px solid black'; moveCard(selectedArea.id, 'hand');">
+</div>
+
+<!-- Resolution Area -->
+<div id="resolution" style="clear:left; border: 5px solid pink; width: 880px; height: 192px; overflow-x: scroll; white-space: nowrap;"></div>
+</div>
+</div>
+</font>
+<p id="-1" style="display: none;"></p>
+
 
 </body>
 </html>
 
 <script>
 
-//JUST TO TEST
-function setP1Select() {
-	var select = document.getElementById("p1CardSelect");
-	var field = p1[document.getElementById("p1Field").value];
-	var text = "";
-	if (field.length > 0) {
-		for (var i = 0; i < field.length-1; i++) {
-			text += "<option value='" + i + "'> " + field[i].name + "</option>";
-		}
-		text += "<option value='" + i + "'> " + field[field.length-1].name + "</option>";
-	}
-	select.innerHTML = text;
+//Card Movement Functions
+
+var selectedArea;
+var nullArea = document.getElementById("-1");
+var selectedCard = nullArea;
+var handArea = document.getElementById("hand");
+var resolution = document.getElementById("resolution");
+
+function highlightBorder(elem) {
+	if (elem != selectedArea && elem != selectedCard)
+		elem.style.border = "1px solid cyan";
 }
-function p1CardStats() {
-	var sWin = document.getElementById("p1StatWin");
-	var card = p1[document.getElementById("p1Field").value][document.getElementById("p1CardSelect").value];
-	output = "<b>" + card.name + "</b><br>";
-	for (var i = 0; i < card.stats.length; i++) {
-		output += "&nbsp;&nbsp;&nbsp;&nbsp;" + card.stats[i][0] + " ~ " + card.stats[i][1] + "<br>";
-	}
-	output += "<i>" + card.desc + "</i><br>";
-	sWin.innerHTML = output;
+
+function revertBorder(elem) {
+	if (elem != selectedArea && elem != selectedCard)
+		elem.style.border = "1px solid black";
 }
-function p1MoveCard() {
-	var fromField = p1[document.getElementById("p1Field").value];
-	var toField = p1[document.getElementById("p1ToField").value];
-	var index = document.getElementById("p1CardSelect").value;
+
+function selectBorder(elem) {
+	var from = selectedArea;
+	if (selectedArea && selectedArea != handArea) selectedArea.style.border = "1px solid black";
+	if (selectedArea == elem)
+		selectedArea = 0;
+	else {
+		elem.style.border = "1px solid blue";
+		selectedArea = elem;
+	}
+
+	if (selectedCard != nullArea) {
+		moveCard(from.id, elem.id);
+	}
+	else
+		fillResolution();
+}
+
+function selectCard(elem) {
+	if (selectedArea == handArea) resolution.innerHTML = "";
+	if (selectedCard) selectedCard.style.border = "1px solid black";
+	if (selectedCard == elem)
+		selectedCard = nullArea;
+	else {
+		elem.style.border = "1px solid gold";
+		selectedCard = elem;
+	}
+}
+
+function moveCard(from, to) {
+	var fromField = p1[from];
+	var toField = p1[to];
+	var index = selectedCard.id;
 	toField.push(fromField[index]);
 	fromField.splice(index, 1);
-	setP1Select();
-	p1PlayField();
+	selectedCard = nullArea;
+	selectedArea = 0;
+
+	refreshFields();
+	updatePlayer();
 }
-function p1PlayField() {
-	var area = document.getElementById("p1PlayArea");
-	output = "";
-	if (p1.play.length > 0) {
-		for (var i = 0; i < p1.play.length-1; i++) {
-			output += "<option value='" + i + "'> " + p1.play[i].name + "</option>";
-		}
-		output += "<option value='" + i + "'> " + p1.play[p1.play.length-1].name + "</option>";
-	}
-	area.innerHTML = output;
-}
-function setP2Select() {
-	var select = document.getElementById("p2CardSelect");
-	var field = p2[document.getElementById("p2Field").value];
-	var text = "";
-	if (field.length > 0) {
-		for (var i = 0; i < field.length-1; i++) {
-			text += "<option value='" + i + "'> " + field[i].name + "</option>";
-		}
-		text += "<option value='" + i + "'> " + field[field.length-1].name + "</option>";
-	}
-	select.innerHTML = text;
-}
-function p2CardStats() {
-	var sWin = document.getElementById("p2StatWin");
-	var card = p2[document.getElementById("p2Field").value][document.getElementById("p2CardSelect").value];
-	output = "<b>" + card.name + "</b><br>";
-	for (var i = 0; i < card.stats.length; i++) {
-		output += "&nbsp;&nbsp;&nbsp;&nbsp;" + card.stats[i][0] + " ~ " + card.stats[i][1] + "<br>";
-	}
-	output += "<i>" + card.desc + "</i><br>";
-	sWin.innerHTML = output;
-}
-function p2MoveCard() {
-	var fromField = p2[document.getElementById("p2Field").value];
-	var toField = p2[document.getElementById("p2ToField").value];
-	var index = document.getElementById("p2CardSelect").value;
-	toField.push(fromField[index]);
-	fromField.splice(index, 1);
-	setP2Select();
-	p2PlayField();
-}
-function p2PlayField() {
-	var area = document.getElementById("p2PlayArea");
-	output = "";
-	if (p2.play.length > 0) {
-		for (var i = 0; i < p2.play.length-1; i++) {
-			output += "<option value='" + i + "'> " + p2.play[i].name + "</option>";
-		}
-		output += "<option value='" + i + "'> " + p2.play[p2.play.length-1].name + "</option>";
-	}
-	area.innerHTML = output;
+
+function refreshFields() {
+	fillHand();
+	setPlayField();
+	fillResolution();
 }
 
 
+
+function fillHand() {
+	var html = "";
+	for (var i = 0; i < p1.hand.length; i++) {
+		html += "<div class='card' id='"+i+"' onmouseover='highlightBorder(this);' onmouseout='revertBorder(this);' onclick='if (selectedArea) if (selectedArea != handArea) selectedArea.style.border="+'"1px solid black"'+"; selectedArea=handArea; selectCard(this);'><b>" + p1.hand[i].name +
+			"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>" + p1.hand[i].type + "</i>" +
+		//Only display description if it is some sort of event card.
+			((p1.hand[i].type!='Event'&&p1.hand[i].type!='Release Event')?(
+			"<br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + p1.hand[i].rarity +
+			"<br>&nbsp;&nbsp;&nbsp;&nbsp;Element ~ " + p1.hand[i].element +
+		//Only display attack/defence/soul if it is a character card.
+			((p1.hand[i].type!='Upgrade Material')?(
+			"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + p1.hand[i].attack +
+			"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + p1.hand[i].defence +
+			"<br>&nbsp;&nbsp;&nbsp;&nbsp;Soul ~ " + p1.hand[i].soul):(""))):("")) +
+			"<br><i>" + p1.hand[i].description + "</i></div>";
+	}
+	document.getElementById("hand").innerHTML = html;
+}
+
+function fillResolution() {
+	var select = selectedArea.id;
+	var html = "";
+	if (select) {
+		for (var i = 0; i < p1[select].length; i++) {
+			html += "<div class='card' id='"+i+"' onmouseover='highlightBorder(this);' onmouseout='revertBorder(this);' onclick='selectCard(this);'><b>" + p1[select][i].name +
+				"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>" + p1[select][i].type + "</i>" +
+			//Only display description if it is some sort of event card.
+				((p1[select][i].type!='Event'&&p1[select][i].type!='Release Event')?(
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + p1[select][i].rarity +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Element ~ " + p1[select][i].element +
+			//Only display attack/defence/soul if it is a character card.
+				((p1[select][i].type!='Upgrade Material')?(
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + p1[select][i].attack +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + p1[select][i].defence +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Soul ~ " + p1[select][i].soul):(""))):("")) +
+				"<br><i>" + p1[select][i].description + "</i></div>";
+		}
+	}
+	document.getElementById("resolution").innerHTML = html;
+}
+
+function p1InitialCardDiv(field) {
+	return "<b>" + p1[field][0].name +
+		"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>" + p1[field][0].type + "</i>" +
+	//Only display description if it is some sort of event card.
+		((p1[field][0].type!='Event'&&p1[field][0].type!='Release Event')?(
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + p1[field][0].rarity +
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Element ~ " + p1[field][0].element +
+	//Only display attack/defence/soul if it is a character card.
+		((p1[field][0].type!='Upgrade Material')?(
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + p1[field][0].attack +
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + p1[field][0].defence +
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Soul ~ " + p1[field][0].soul):(""))):("")) +
+		"<br><i>" + p1[field][0].description + "</i>";
+}
+
+function setPlayField() {
+	for (var i = 1; i < 7; i++) {
+		if (p1["pa"+i][0]) {
+			var html = "<b>" + p1["pa"+i][0].name +
+			"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>" + p1["pa"+i][0].type + "</i>" +
+		//Only display description if it is some sort of event card.
+			((p1["pa"+i][0].type!='Event'&&p1["pa"+i][0].type!='Release Event')?(
+			"<br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + p1["pa"+i][0].rarity +
+			"<br>&nbsp;&nbsp;&nbsp;&nbsp;Element ~ " + p1["pa"+i][0].element +
+		//Only display attack/defence/soul if it is a character card.
+			((p1["pa"+i][0].type!='Upgrade Material')?(
+			"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + p1["pa"+i][0].attack +
+			"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + p1["pa"+i][0].defence +
+			"<br>&nbsp;&nbsp;&nbsp;&nbsp;Soul ~ " + p1["pa"+i][0].soul):(""))):("")) +
+			"<br><i>" + p1["pa"+i][0].description + "</i>";
+			document.getElementById("pa"+i).innerHTML = html;
+		}
+		else document.getElementById("pa"+i).innerHTML = "";
+	}
+
+	if (p1.event[0])
+		document.getElementById("event").innerHTML = p1InitialCardDiv("event");
+	else
+		document.getElementById("event").innerHTML = "Event";
+
+	if (p1.memory[0])
+		document.getElementById("memory").innerHTML = p1InitialCardDiv("memory");
+	else
+		document.getElementById("memory").innerHTML = "Memory";
+
+	if (p1.discPile[0])
+		document.getElementById("discPile").innerHTML = p1InitialCardDiv("discPile");
+	else
+		document.getElementById("discPile").innerHTML = "Discard";
+}
+
+function setOpponentPlayField() {
+	for (var i = 1; i < 7; i++) {
+		if (p2["pa"+i][0]) {
+			var html = "<b>" + p2["pa"+i][0].name +
+			"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>" + p2["pa"+i][0].type + "</i>" +
+		//Only display description if it is some sort of event card.
+			((p2["pa"+i][0].type!='Event'&&p2["pa"+i][0].type!='Release Event')?(
+			"<br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + p2["pa"+i][0].rarity +
+			"<br>&nbsp;&nbsp;&nbsp;&nbsp;Element ~ " + p2["pa"+i][0].element +
+		//Only display attack/defence/soul if it is a character card.
+			((p2["pa"+i][0].type!='Upgrade Material')?(
+			"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + p2["pa"+i][0].attack +
+			"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + p2["pa"+i][0].defence +
+			"<br>&nbsp;&nbsp;&nbsp;&nbsp;Soul ~ " + p2["pa"+i][0].soul):(""))):("")) +
+			"<br><i>" + p2["pa"+i][0].description + "</i>";
+			document.getElementById("epa"+i).innerHTML = html;
+		}
+		else document.getElementById("epa"+i).innerHTML = "";
+	}
+
+	if (p2.event[0]) {
+		var html = "<b>" + p2.event[0].name +
+		"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>" + p2.event[0].type + "</i>" +
+	//Only display description if it is some sort of event card.
+		((p2.event[0].type!='Event'&&p2.event[0].type!='Release Event')?(
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + p2.event[0].rarity +
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Element ~ " + p2.event[0].element +
+	//Only display attack/defence/soul if it is a character card.
+		((p2.event[0].type!='Upgrade Material')?(
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + p2.event[0].attack +
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + p2.event[0].defence +
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Soul ~ " + p2.event[0].soul):(""))):("")) +
+		"<br><i>" + p2.event[0].description + "</i>";
+		document.getElementById("eevent").innerHTML = html;
+	}
+	else document.getElementById("eevent").innerHTML = "Enemy Event";
+}
+
+function selectEnemyArea(area) {
+	selectedArea = 0;
+	selectedCard = nullArea;
+	var select = area.id.substring(1);
+	var html = "";
+	if (select) {
+		for (var i = 0; i < p2[select].length; i++) {
+			html += "<div class='card'><b>" + p2[select][i].name +
+				"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>" + p2[select][i].type + "</i>" +
+			//Only display description if it is some sort of event card.
+				((p2[select][i].type!='Event'&&p2[select][i].type!='Release Event')?(
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + p2[select][i].rarity +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Element ~ " + p2[select][i].element +
+			//Only display attack/defence/soul if it is a character card.
+				((p2[select][i].type!='Upgrade Material')?(
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + p2[select][i].attack +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + p2[select][i].defence +
+				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Soul ~ " + p2[select][i].soul):(""))):("")) +
+				"<br><i>" + p2[select][i].description + "</i></div>";
+		}
+	}
+	document.getElementById("resolution").innerHTML = html;
+}
+
+
+
+function updatePlayer() {
+	try { cardGame.collection("players").updateOne({"name": p1.name},
+		{ $set: {name: p1.name, deck: p1.deck, hand: p1.hand, discPile: p1.discPile, pa1: p1.pa1, pa2: p1.pa2, pa3: p1.pa3, pa4: p1.pa4, pa5: p1.pa5, pa6: p1.pa6, event: p1.event, memory: p1.memory} },
+		{upsert: true}).then();}
+	catch (e) {document.getElementById("playerName").value = e;}
+}
+
+function loadPlayer(p) {
+	try { cardGame.collection("players").find({name: p.name}).then(docs => {
+		docs.map(player => {
+		p.deck = player.deck;
+		p.hand = player.hand;
+		p.discPile = player.discPile;
+		p.pa1 = player.pa1;
+		p.pa2 = player.pa2;
+		p.pa3 = player.pa3;
+		p.pa4 = player.pa4;
+		p.pa5 = player.pa5;
+		p.pa6 = player.pa6;
+		p.event = player.event;
+		p.memory = player.memory;
+	})}).then();}
+	catch (e) {document.getElementById("playerName").value = e;}
+}
+
+function initializePlayer() {
+	var player = document.getElementById("playerName");
+	var deck = document.getElementById("deckName");
+	p1.name = player.value;
+	try { cardGame.collection("decks").find({name: deck.value}).then(docs => {
+		docs.map(deck => {
+		p1.deck = deck.cards;
+		p1.hand = deck.starter;
+	})}).then(setInitFields);
+	updatePlayer();
+	}
+	catch (e) {document.getElementById("playerName").value = e;}
+
+}
+
+function setInitFields() {
+	var tempDeck = [];
+	for (var i = 0; i < p1.deck.length; i++) {
+		if (p1.deck[i].type == "Release Event")
+			p1.event.push(p1.deck[i]);
+		else if (p1.deck[i].type == "Gacha Character")
+			p1.memory.push(p1.deck[i]);
+		else tempDeck.push(p1.deck[i]);
+	}
+	p1.deck = tempDeck;
+
+	p1.shuffle();
+
+	refreshFields();
+}
 
 
 
@@ -308,82 +437,61 @@ function flipCoins() {
 	document.getElementById("flipResult").innerHTML = result;
 }
 
+//Stuff to send messages
+
+function sendMessage(message) {
+	try { cardGame.collection("logs").insert({"message": p1.name + ": " + message})
+		.then(showMessages); }
+	catch (e) {document.getElementById("chatLog").innerHTML = e;}
+}
+
+function showMessages() {
+	cardGame.collection("logs").find({}).then(docs => {
+		var html = docs.map(m => "<div>" + m.message + "</div>").join("");
+		document.getElementById("chatLog").innerHTML = html;
+	});
+}
+
+function clearMessages() {
+	cardGame.collection("logs").deleteMany({}).then(showMessages);
+}
+
 
 
 //Card Descriptions
-function effect(desc, range, tags, target, stats, status, action, actionArgs, phase, phaseEnd, duration) {
-	this.desc = desc;
-	this.range = range;
-	this.tags = tags;
-	this.target = target;
-	this.stats = stats;
-	this.status = status;
-	this.action = action;
-	this.actionArgs = actionArgs;
-	this.phase = phase;
-	this.phaseEnd = phaseEnd;
-	this.duration = duration;
+
+function card(name, type, rarity, element, attack, defence, soul, description) {
+	this.name = name;
+	this.type = type;
+	this.rarity = rarity;
+	this.element = element;
+	this.attack = attack;
+	this.defence = defence;
+	this.soul = soul;
+	this.description = description;
 }
 
-effect.prototype.apply = function() {
-	for (var i = 0; i < this.action.length; i++) {
-		target[this.action[i]](this.actionArgs[i]);
-	}
-};
-
-effect.prototype.remove = function() {
-};
-
-function card(name, desc, stats, effects, tags) {
+function player(name) {
 	this.name = name;
-	this.desc = desc;
-	this.stats = stats;
-	this.position = {x : 0, y : 0};
-	this.effects = effects;
-	this.tags = tags;
-	this.status = {};
-}
-
-function player(name, deck, stats, extraFields) {
-	this.name = name;
-	this.deck = deck;
+	this.deck = [];
 	this.hand = [];
 	this.discPile = [];
-
-	//JUST FOR TESTING; DELETE THIS FIELD LATER
-	this.play = [];
+	this.pa1 = [];
+	this.pa2 = [];
+	this.pa3 = [];
+	this.pa4 = [];
+	this.pa5 = [];
+	this.pa6 = [];
+	this.event = [];
 	this.memory = [];
-
-	this.resolution = [];
-	this.fields = extraFields;
-
-	this.stats = stats;
 }
 
 player.prototype.draw = function(count) {
-	for (i = 0; i < count; i++) {
-		this.hand.push(this.deck[0]);
-		this.deck.shift();
-	}
-};
-
-player.prototype.select = function(field, tags, amount) {
-	var selected = 0;
-	if (field == "deck" || field == "hand" || field == "discPile") {
-		for (var i = 0; i < this[field].length; i++) {
-			/*CHANGE*/
-			if (tags == "any") {
-			}
-			else if (this[field][i] == tags) {
-			}
+	if (this.deck[0]) {
+		for (i = 0; i < count; i++) {
+			this.hand.push(this.deck[0]);
+			this.deck.shift();
 		}
-		while (selected < amount) {
-			this.resolution.push(this[field][0]);
-			this[field].splice(0, 1);
-			selected++;
-		}
-	}
-	else {
 	}
 };
 
@@ -414,123 +522,11 @@ player.prototype.refresh = function() {
 	this.shuffle();
 };
 
-function gametype(phases, actions) {
-	this.phases = phases;
-	this.currentPhase = 0;
-	this.actions = actions;
-	this.players = [];
-	this.currentPlayer = 0;
-}
-
-var header = document.getElementById("header");
-var actionSelect = document.getElementById("actionSelect");
-gametype.prototype.setPhase = function() {
-	header.innerHTML = "Player ~ " + this.players[this.currentPlayer].name + "<br>Current Phase: " + this.phases[this.currentPhase];
-
-	/*actionSelect.innerHTML = "";
-	for (var i = 0; i < this.actions[this.currentPhase].length; i++) {
-		actionSelect.innerHTML += "<option value='" + this.actions[this.currentPhase][i] + "'>" + this.actions[this.currentPhase][i] + "</option>";
-	}*/
-};
-
-gametype.prototype.nextPhase = function() {
-	this.currentPhase++;
-	if (this.currentPhase == this.phases.length) {
-		this.currentPhase = 0;
-		this.currentPlayer++;
-		if (this.currentPlayer == this.players.length) this.currentPlayer = 0;
-	}
-	this.setPhase();
-};
 
 
+var p1 = new player("");
+var p2 = new player("");
 
-//Testing Functionality
-var game = new gametype(["Event", "Recharge", "Roll", "Main", "Attack", "Upgrade", "End"], [["Draw"], [], ["Clock"], ["Play", "Move"], ["Climax"], ["Attack"], []]);
-
-//C 3, U 4, R 5, SR 7, UR 9
-
-var FateTestarossaCard = new card("Fate Testarossa", "Starter", [["Rarity", "C"], ["Element", "Neutral"], ["Attack", 1], ["Defence", 2]], {}, []);
-var StartDashCard = new card("Start Dash Campaign", "Event ~ At the beginning of your first turn, gain 5 free crystals.", [], {}, []);
-var MaterialsBannerCard = new card("Materials Pickup", "Event ~ If this card is in your deck, place all cards with the names 'Levi the Slasher,' 'Load Dearche,' and 'Stern the Destructor' into Memory. When this card is played, search your Memory for those cards and place them in your deck. Shuffle your deck. At the end of your next turn, return those cards to Memory and shuffle your deck.", [], {}, []);
-var LeviTheSlasherCard = new card("Levi the Slasher", "When this card attacks an enemy Character, you may choose to double its attack and halve its defence, rounding down.", [["Rarity", "UR"], ["Element", "Dark"], ["Attack", 5], ["Defence", 3]], {}, []);
-var LoadDearcheCard = new card("Load Dearche", "When this card is played, if you have a 'Levi the Slasher' and 'Stern the Destructor' in Memory, add 2/2 to this Character.", [["Rarity", "SR"], ["Element", "Dark"], ["Attack", 3], ["Defence", 3]], {}, []);
-var SternTheDestructorCard = new card("Stern the Destructor", "", [["Rarity", "SR"], ["Element", "Dark"], ["Attack", 4], ["Defence", 3]], {}, []);
-var RechargeURCampaignCard = new card("RechargeURCampaign", "Event ~ If you make a purchase of 10 or more crystals during the campaign period, you make take a guaranteed UR roll.", [], {}, []);
-var TakamachiNanohaCard = new card("Takamachi Nanoha", "Starter", [["Rarity", "C"], ["Element", "Neutral"], ["Attack", 1], ["Defence", 2]], {}, []);
-var YuunoScryaCard = new card("Yuuno Scrya", "Starter; While this card is in play, increase the defence of your Characters with the name 'Nanoha' by 1.", [["Rarity", "C"], ["Element", "Neutral"], ["Attack", 1], ["Defence", 1]], {}, []);
-var AlphCard = new card("Alph", "Starter; While this card is in play, increase the attack of your Characters with the name 'Fate' by 1.", [["Rarity", "C"], ["Element", "Neutral"], ["Attack", 1], ["Defence", 1]], {}, []);
-var SonicFormFateCard = new card("Sonic Form Fate", "Starter", [["Rarity", "R"], ["Element", "Neutral"], ["Attack", 4], ["Defence", 1]], {}, []);
-//var INSERTNAMEHERE Card = new card("NAME", "Starter", [["Rarity", "C"], ["Element", "Neutral"], ["Attack", 1], ["Defence", 2]], {}, []);
-
-
-
-var p1deck = [];
-var p2deck = [];
-
-for (var i = 0; i < 3; i++) {
-	p1deck.push(FateTestarossaCard);
-	p1deck.push(AlphCard);
-	p1deck.push(TakamachiNanohaCard);
-	p1deck.push(YuunoScryaCard);
-	p2deck.push(FateTestarossaCard);
-	p2deck.push(AlphCard);
-	p2deck.push(TakamachiNanohaCard);
-	p2deck.push(YuunoScryaCard);
-}
-
-p1deck.push(MaterialsBannerCard);
-p2deck.push(MaterialsBannerCard);
-
-var p1 = new player("Player 1", p1deck, {}, {});
-var p2 = new player("Player 2", p2deck, {}, {});
-p1.hand.push(FateTestarossaCard);
-p1.hand.push(TakamachiNanohaCard);
-p1.hand.push(YuunoScryaCard);
-p1.hand.push(AlphCard);
-p1.hand.push(SonicFormFateCard);
-p1.memory.push(LeviTheSlasherCard);
-p1.memory.push(LeviTheSlasherCard);
-p1.memory.push(LoadDearcheCard);
-p1.memory.push(LoadDearcheCard);
-p1.memory.push(LoadDearcheCard);
-p1.memory.push(LoadDearcheCard);
-p1.memory.push(SternTheDestructorCard);
-p1.memory.push(SternTheDestructorCard);
-p1.memory.push(SternTheDestructorCard);
-p1.memory.push(SternTheDestructorCard);
-p1.play.push(StartDashCard);
-p2.hand.push(FateTestarossaCard);
-p2.hand.push(TakamachiNanohaCard);
-p2.hand.push(YuunoScryaCard);
-p2.hand.push(AlphCard);
-p2.hand.push(SonicFormFateCard);
-p2.memory.push(LeviTheSlasherCard);
-p2.memory.push(LeviTheSlasherCard);
-p2.memory.push(LoadDearcheCard);
-p2.memory.push(LoadDearcheCard);
-p2.memory.push(LoadDearcheCard);
-p2.memory.push(LoadDearcheCard);
-p2.memory.push(SternTheDestructorCard);
-p2.memory.push(SternTheDestructorCard);
-p2.memory.push(SternTheDestructorCard);
-p2.memory.push(SternTheDestructorCard);
-p2.play.push(StartDashCard);
-
-game.players.push(p1);
-game.players.push(p2);
-
-game.setPhase();
-
-function format(field) {
-	var text = "";
-	if (field.length > 0) {
-		for (var i = 0; i < field.length-1; i++) {
-			text += field[i].name + ", ";
-		}
-		text += field[field.length-1].name;
-	}
-	return text;
-}
+setInterval(function() { loadPlayer(p2); setOpponentPlayField(); showMessages();}, 1000);
 
 </script>
