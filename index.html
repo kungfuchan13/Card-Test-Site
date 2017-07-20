@@ -80,6 +80,16 @@ Coins:&nbsp;
 		this.value='Clear Chat Log';
 		clearMessages();
 	}">
+
+</div>
+
+<div style="position: fixed; left: 1150px; z-index: 1;">
+	Paid Crystals:<br>
+	<input value="20" onblur="p1.pcry = this.value; updatePlayer();"><br>
+	Free Crystals:<br>
+	<input value="0" onblur="p1.fcry = this.value; updatePlayer();"><br>
+	<div id="epcry">Opponent's Paid<br>&nbsp;&nbsp;&nbsp;&nbsp;Crystals: </div>
+	<div id="efcry">Opponent's Free<br>&nbsp;&nbsp;&nbsp;&nbsp;Crystals: </div>
 </div>
 
 <!-- PLAY MAT HERE -->
@@ -340,6 +350,9 @@ function setOpponentPlayField() {
 		document.getElementById("eevent").innerHTML = html;
 	}
 	else document.getElementById("eevent").innerHTML = "Enemy Event";
+
+	document.getElementById("epcry").innerHTML = "Opponent's Paid<br>&nbsp;&nbsp;&nbsp;&nbsp;Crystals: " + p2.pcry;
+	document.getElementById("efcry").innerHTML = "Opponent's Free<br>&nbsp;&nbsp;&nbsp;&nbsp;Crystals: " + p2.fcry;
 }
 
 function selectEnemyArea(area) {
@@ -370,7 +383,7 @@ function selectEnemyArea(area) {
 
 function updatePlayer() {
 	try { cardGame.collection("players").updateOne({"name": p1.name},
-		{ $set: {name: p1.name, deck: p1.deck, hand: p1.hand, discPile: p1.discPile, pa1: p1.pa1, pa2: p1.pa2, pa3: p1.pa3, pa4: p1.pa4, pa5: p1.pa5, pa6: p1.pa6, event: p1.event, memory: p1.memory} },
+		{ $set: {name: p1.name, deck: p1.deck, hand: p1.hand, discPile: p1.discPile, pa1: p1.pa1, pa2: p1.pa2, pa3: p1.pa3, pa4: p1.pa4, pa5: p1.pa5, pa6: p1.pa6, event: p1.event, memory: p1.memory, pcry: p1.pcry, fcry: p1.fcry} },
 		{upsert: true}).then();}
 	catch (e) {document.getElementById("playerName").value = e;}
 }
@@ -389,6 +402,8 @@ function loadPlayer(p) {
 		p.pa6 = player.pa6;
 		p.event = player.event;
 		p.memory = player.memory;
+		p.pcry = player.pcry;
+		p.fcry = player.fcry;
 	})}).then();}
 	catch (e) {document.getElementById("playerName").value = e;}
 }
@@ -406,12 +421,14 @@ function initializePlayer() {
 	p1.pa6 = [];
 	p1.event = [];
 	p1.memory = [];
+	p1.pcry = 20;
+	p1.fcry = 0;
 	try { cardGame.collection("decks").find({name: deck.value}).then(docs => {
 		docs.map(deck => {
 		p1.deck = deck.cards;
 		p1.hand = deck.starter;
 	})}).then(setInitFields);
-	setTimeout(updatePlayer, 750);
+	setTimeout(updatePlayer, 2000);
 	}
 	catch (e) {document.getElementById("playerName").value = e;}
 
@@ -493,6 +510,9 @@ function player(name) {
 	this.pa6 = [];
 	this.event = [];
 	this.memory = [];
+	
+	this.pcry = 20;
+	this.fcry = 0;
 }
 
 player.prototype.draw = function(count) {
