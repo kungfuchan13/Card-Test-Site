@@ -144,7 +144,7 @@ Coins:&nbsp;
 	<input type="button" value="Refresh Deck" onclick="p1.refresh(); refreshFields();"><br>
 	<br>
 	<input type="button" value="Move Selected Card to Hand" onclick="
-		if (selectedArea && selectedArea != handArea) selectedArea.style.border = '1px solid black'; moveCard(selectedArea.id, 'hand');">
+		if (selectedArea && selectedArea != handArea) selectedArea.style.border = '1px solid black'; if (selectedCard != nullArea) moveCard(selectedArea.id, 'hand');">
 </div>
 
 <!-- Resolution Area -->
