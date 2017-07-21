@@ -20,7 +20,9 @@
 		elem.style.border = "1px solid black";
 	}
 		
-	function cardDiv(name, cardType, rarity, element, attack, defence, soul, description, select) {
+	function cardDiv(name, cardType, rarity, element, attack, defence, soul, description, pack, select) {
+		var filter = document.getElementById("packFilter");
+		if (filter.value == "none" || filter.value == pack)
 		return "<div class='card' id='"+name+"' " +
 			//Only add select functionality if the select attribute is true.
 			((select)?("onclick='addToDeck(this.id);'"):("onclick='fillCardFields(this.id);'")) +
@@ -35,14 +37,27 @@
 				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + attack +
 				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + defence +
 				"<br>&nbsp;&nbsp;&nbsp;&nbsp;Soul ~ " + soul):(""))):("")) +
-				"<br><i>" + description + "</i></div>"
+				"<br><i>" + description + "</i></div>";
 	}
 	function displayCards() {
 		cardGame.collection('card-types').find({}).then(docs => {
-			var html = docs.map(c => cardDiv(c.name, c.cardType, c.rarity, c.element, c.attack, c.defence, c.soul, c.description, false)).join("");
-			var html2 = docs.map(c => cardDiv(c.name, c.cardType, c.rarity, c.element, c.attack, c.defence, c.soul, c.description, true)).join("");
+			var html = docs.map(c => cardDiv(c.name, c.cardType, c.rarity, c.element, c.attack, c.defence, c.soul, c.description, c.pack, false)).join("");
+			var html2 = docs.map(c => cardDiv(c.name, c.cardType, c.rarity, c.element, c.attack, c.defence, c.soul, c.description, c.pack, true)).join("");
+
+			var tempObject = {};
+			var tempList = [];
+			docs.forEach(c => {
+				if (!tempObject[c.pack]) {
+					tempList.push(c.pack);
+					tempObject[c.pack] = 1;
+				}
+			});
+			var html3 = tempList.map(p => "<option value='" + p + "'>" + p + "</option>").join("");
+
+			document.getElementById("deck").innerHTML = tempList;
 			document.getElementById("cards").innerHTML = html;
 			document.getElementById("cardList").innerHTML = html2;
+			document.getElementById("packFilter").innerHTML = "<option value='none'>None</option>" + html3;
 		});
 	}
 	function addCard() {
@@ -54,8 +69,9 @@
 		var defence = document.getElementById("newCardDefence");
 		var soul = document.getElementById("newCardSoul");
 		var description = document.getElementById("newCardDescription");
+		var pack = document.getElementById("newCardPack");
 		try { cardGame.collection("card-types").updateOne({"name": name.value},
-			{ $set: {name: name.value, cardType: cardType.value, rarity: rarity.value, element: element.value, attack: attack.value, defence: defence.value, soul: soul.value, description: description.value} },
+			{ $set: {name: name.value, cardType: cardType.value, rarity: rarity.value, element: element.value, attack: attack.value, defence: defence.value, soul: soul.value, description: description.value, pack: pack.value} },
 			{upsert: true})
 			.then(displayCards); }
 		catch (e) {document.getElementById("cards").innerHTML = e;}
@@ -69,6 +85,7 @@
 		var defence = document.getElementById("newCardDefence");
 		var soul = document.getElementById("newCardSoul");
 		var description = document.getElementById("newCardDescription");
+		var pack = document.getElementById("newCardPack");
 		try { cardGame.collection("card-types").find({name: cardName}).then(docs => {
 			docs.map(card => {
 			name.value = card.name;
@@ -79,6 +96,7 @@
 			defence.value = card.defence;
 			soul.value = card.soul;
 			description.value = card.description;
+			pack.value = card.pack;
 		})}) }
 		catch (e) {document.getElementById("cards").innerHTML = e;}
 	}
@@ -204,6 +222,8 @@ Toggle Card Creation Menu: <input type="checkbox" onclick="
 	if (this.checked) document.getElementById('cardCreationMenu').style.display = 'block';
 	else document.getElementById('cardCreationMenu').style.display = 'none';">
 
+&nbsp;&nbsp;&nbsp;&nbsp;Filter by Pack: <select id="packFilter" onblur="displayCards();"><option value="none">None</option></select>
+
 <div id="cardCreationMenu" style="border: 1px solid black; padding: 10px; display: none;">
 Name: <input id="newCardName"> <input type="button" value="Search" onclick="fillCardFields(document.getElementById('newCardName').value);"><br>
 Card Type: <select id="newCardType">
@@ -238,6 +258,7 @@ Soul: <select id="newCardSoul">
 	</select><br>
 Description:<br>
 <textarea id="newCardDescription"></textarea><br>
+Pack: <input id="newCardPack"><br>
 <input type="button" value="Add/Modify" onclick="addCard();">
 <input type="button" value="Remove" onblur="this.value='Remove';" onclick="
 	if (this.value=='Remove') this.value='Are you sure?';
