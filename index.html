@@ -102,7 +102,8 @@ Coins:&nbsp;
 
 <!-- ENEMY LEFT SIDE -->
 <div style="border: 5px solid red; padding: 10px; width: 150px; height: 390px; text-align: center; float: left;">
-	<div id="eevent" class="card" style="position: relative; top: 197px;" onclick="selectEnemyArea(this);">Enemy Event</div>
+	<div id="ediscPile" class="card" onclick="selectEnemyArea(this);">Enemy Discard</div>
+	<div id="edeck" class="card">Enemy Deck</div>
 </div>
 <!-- ENEMY PLAY AREA -->
 <div id="enemyPlay" style="border: 5px solid red; padding: 10px; width: 500px; float: left;">
@@ -113,6 +114,14 @@ Coins:&nbsp;
 	<div id="epa2" class="card" onclick="selectEnemyArea(this);"></div>
 	<div id="epa1" class="card" onclick="selectEnemyArea(this);"></div>
 </div>
+<!-- ENEMY RIGHT SIDE -->
+<div style="border: 5px solid red; padding: 10px; width: 150px; height: 390px; text-align: center; float: left;">
+	<div id="ememory" class="card" onclick="selectEnemyArea(this);">Enemy Memory</div>
+	<div id="eevent" class="card" onclick="selectEnemyArea(this);">Enemy Event</div>
+</div>
+
+
+
 <!-- Left Side -->
 <div style="border: 5px solid gold; padding: 10px; width: 150px; height: 612px; float: left; text-align: center; clear: left;">
 	<div id="event" class="card" onmouseover="highlightBorder(this);" onmouseout="revertBorder(this);" onmousedown="selectBorder(this);">Event</div>
@@ -314,6 +323,8 @@ function setPlayField() {
 		document.getElementById("discPile").innerHTML = p1InitialCardDiv("discPile");
 	else
 		document.getElementById("discPile").innerHTML = "Discard";
+
+	document.getElementById("deck").innerHTML = "Deck<br>&nbsp;&nbsp;&nbsp;&nbsp;Size ~ " + p1.deck.length;
 }
 
 function setOpponentPlayField() {
@@ -352,6 +363,42 @@ function setOpponentPlayField() {
 		document.getElementById("eevent").innerHTML = html;
 	}
 	else document.getElementById("eevent").innerHTML = "Enemy Event";
+
+	if (p2.discPile[0]) {
+		var html = "<b>" + p2.discPile[0].name +
+		"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>" + p2.discPile[0].type + "</i>" +
+	//Only display description if it is some sort of event card.
+		((p2.discPile[0].type!='Event'&&p2.discPile[0].type!='Release Event')?(
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + p2.discPile[0].rarity +
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Element ~ " + p2.discPile[0].element +
+	//Only display attack/defence/soul if it is a character card.
+		((p2.discPile[0].type!='Upgrade Material')?(
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + p2.discPile[0].attack +
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + p2.discPile[0].defence +
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Soul ~ " + p2.discPile[0].soul):(""))):("")) +
+		"<br><i>" + p2.discPile[0].description + "</i>";
+		document.getElementById("ediscPile").innerHTML = html;
+	}
+	else document.getElementById("ediscPile").innerHTML = "Enemy Discard";
+
+	if (p2.memory[0]) {
+		var html = "<b>" + p2.memory[0].name +
+		"</b><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>" + p2.memory[0].type + "</i>" +
+	//Only display description if it is some sort of event card.
+		((p2.memory[0].type!='Event'&&p2.memory[0].type!='Release Event')?(
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Rarity ~ " + p2.memory[0].rarity +
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Element ~ " + p2.memory[0].element +
+	//Only display attack/defence/soul if it is a character card.
+		((p2.memory[0].type!='Upgrade Material')?(
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Attack ~ " + p2.memory[0].attack +
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Defence ~ " + p2.memory[0].defence +
+		"<br>&nbsp;&nbsp;&nbsp;&nbsp;Soul ~ " + p2.memory[0].soul):(""))):("")) +
+		"<br><i>" + p2.memory[0].description + "</i>";
+		document.getElementById("ememory").innerHTML = html;
+	}
+	else document.getElementById("ememory").innerHTML = "Enemy Memory";
+
+	document.getElementById("edeck").innerHTML = "Enemy Deck: " + p2.deck.length + " Cards<br>Enemy Hand: " + p2.hand.length + " Cards";
 
 	document.getElementById("epcry").innerHTML = "Opponent's Paid<br>&nbsp;&nbsp;&nbsp;&nbsp;Crystals: " + p2.pcry;
 	document.getElementById("efcry").innerHTML = "Opponent's Free<br>&nbsp;&nbsp;&nbsp;&nbsp;Crystals: " + p2.fcry;
@@ -524,6 +571,7 @@ player.prototype.draw = function(count) {
 			this.deck.shift();
 		}
 	}
+	updatePlayer();
 };
 
 player.prototype.discard = function() {
