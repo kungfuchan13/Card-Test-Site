@@ -1,0 +1,32 @@
+<head>
+	<script src="https://s3.amazonaws.com/stitch-sdks/js/library/stable/stitch.min.js"></script>
+	<script>
+	const client = new stitch.StitchClient('card-game-test-wudbg');
+	const cardGame = client.service('mongodb', 'mongodb-atlas').db('card-game');
+
+  function removePlayer() {
+    var thePlayer = document.getElementById("thePlayer");
+	  cardGame.collection("players").deleteOne({name: thePlayer.value}).then(fillPlayerList);
+  }
+
+	function fillPlayerList() {
+		var list = document.getElementById("deckList");
+		cardGame.collection('players').find({}).then(docs => {
+			var html = docs.map(p => "<div onclick='document.getElementById("+'"thePlayer"'+").value=this.innerHTML;' onmouseover='this.style.backgroundColor="+'"#aaa"'+";'onmouseout='this.style.backgroundColor="+'"#fff"'+";'>" + p.name + "</div>").join("");
+			document.getElementById("playerList").innerHTML = html;
+		});
+	}
+	</script>
+</head>
+
+<html>
+Players:
+<input id="thePlayer">
+<input type="button" value="Remove" onblur="this.value='Remove';" onclick="
+	if (this.value=='Remove') this.value='Are you sure?';
+	else {
+		this.value='Remove';
+		removePlayer();
+	}"><br>
+<div id="playerList" style="border: 5px solid purple;"></div>
+</html>
