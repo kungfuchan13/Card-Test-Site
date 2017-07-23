@@ -20,6 +20,7 @@
 </head>
 
 <html>
+<body onload="client.login().then(fillPlayerList);">
 Players:
 <input id="thePlayer">
 <input type="button" value="Remove" onblur="this.value='Remove';" onclick="
@@ -29,4 +30,5 @@ Players:
 		removePlayer();
 	}"><br>
 <div id="playerList" style="border: 5px solid purple;"></div>
+</body>
 </html>
