@@ -1,5 +1,5 @@
 <head>
-	<script src="https://s3.amazonaws.com/stitch-sdks/js/library/stable/stitch.min.js"></script>
+	<script src="https://s3.amazonaws.com/stitch-sdks/js/bundles/4.3.1/stitch.js"></script>
 	<script>
 	function card(name, type, rarity, element, attack, defence, soul, description) {
 		this.name = name;
@@ -11,8 +11,8 @@
 		this.soul = soul;
 		this.description = description;
 	}
-	const client = new stitch.StitchClient('card-game-test-wudbg');
-	const cardGame = client.service('mongodb', 'mongodb-atlas').db('card-game');
+	const client = stitch.Stitch.initializeDefaultAppClient("card-game-test-wudbg");
+	const cardGame = client.getServiceClient(stitch.RemoteMongoClient.factory, "mongodb-atlas").db('card-game');
 	function setBorder(elem) {
 		elem.style.border = "1px solid cyan";
 	}
@@ -40,7 +40,7 @@
 				"<br><i>" + description + "</i></div>";
 	}
 	function displayCards() {
-		cardGame.collection('card-types').find({}).then(docs => {
+		cardGame.collection('card-types').find({}).asArray().then(docs => {
 			var html = docs.map(c => cardDiv(c.name, c.cardType, c.rarity, c.element, c.attack, c.defence, c.soul, c.description, c.pack, false)).join("");
 			var html2 = docs.map(c => cardDiv(c.name, c.cardType, c.rarity, c.element, c.attack, c.defence, c.soul, c.description, c.pack, true)).join("");
 
@@ -85,7 +85,7 @@
 		var soul = document.getElementById("newCardSoul");
 		var description = document.getElementById("newCardDescription");
 		var pack = document.getElementById("newCardPack");
-		try { cardGame.collection("card-types").find({name: cardName}).then(docs => {
+		try { cardGame.collection("card-types").find({name: cardName}).asArray().then(docs => {
 			docs.map(card => {
 			name.value = card.name;
 			cardType.value = card.cardType;
@@ -151,7 +151,7 @@
 	}
 	function addToDeck(cardName) {
 		var selectStarter = document.getElementById("selectStarter");
-		try { cardGame.collection("card-types").find({name: cardName}).then(docs => {
+		try { cardGame.collection("card-types").find({name: cardName}).asArray().then(docs => {
 			docs.map(c => {
 				if (selectStarter.checked)
 					starter.push(new card(c.name, c.cardType, c.rarity, c.element, c.attack, c.defence, c.soul, c.description));
@@ -169,7 +169,7 @@
 	}
 	function fillDeckList() {
 		var list = document.getElementById("deckList");
-		cardGame.collection('decks').find({}).then(docs => {
+		cardGame.collection('decks').find({}).asArray().then(docs => {
 			var html = docs.map(d => "<div onclick='document.getElementById("+'"deckName"'+").value=this.innerHTML;' onmouseover='this.style.backgroundColor="+'"#aaa"'+";'onmouseout='this.style.backgroundColor="+'"#fff"'+";'>" + d.name + "</div>").join("");
 			document.getElementById("deckList").innerHTML = html;
 		});
@@ -183,7 +183,7 @@
 	}
 	function searchDeck() {
 		var deck = document.getElementById("deckName");
-		try { cardGame.collection("decks").find({name: deck.value}).then(docs => {
+		try { cardGame.collection("decks").find({name: deck.value}).asArray().then(docs => {
 			docs.map(d => {
 				curDeck = d.cards;
 				starter = d.starter;
@@ -215,7 +215,7 @@
 </head>
 
 <html>
-<body onload="client.login().then(displayCards).then(fillDeckList);">
+<body onload="client.auth.loginWithCredential(new stitch.AnonymousCredential()).then(displayCards).then(fillDeckList).catch(console.error);">
 
 Toggle Card Creation Menu: <input type="checkbox" onclick="
 	if (this.checked) document.getElementById('cardCreationMenu').style.display = 'block';
