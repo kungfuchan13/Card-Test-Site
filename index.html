@@ -1,8 +1,8 @@
 <head>
-	<script src="https://s3.amazonaws.com/stitch-sdks/js/library/stable/stitch.min.js"></script>
+	<script src="https://s3.amazonaws.com/stitch-sdks/js/bundles/4.3.1/stitch.js"></script>
 	<script>
-	const client = new stitch.StitchClient('card-game-test-wudbg');
-	const cardGame = client.service('mongodb', 'mongodb-atlas').db('card-game');
+	const client = stitch.Stitch.initializeDefaultAppClient("card-game-test-wudbg");
+	const cardGame = client.getServiceClient(stitch.RemoteMongoClient.factory, "mongodb-atlas").db('card-game');
 
 	</script>
 
@@ -26,7 +26,7 @@
 </head>
 
 <html>
-<body onload="client.login();">
+<body onload="client.auth.loginWithCredential(new stitch.AnonymousCredential());">
 
 <div style="width: 1420px; border: 1px solid white;">
 <div style="float: right;">
@@ -438,7 +438,7 @@ function updatePlayer() {
 }
 
 function loadPlayer(p) {
-	try { cardGame.collection("players").find({name: p.name}).then(docs => {
+	try { cardGame.collection("players").find({name: p.name}).asArray().then(docs => {
 		docs.map(player => {
 		p.deck = player.deck;
 		p.hand = player.hand;
@@ -472,7 +472,7 @@ function initializePlayer() {
 	p1.memory = [];
 	p1.pcry = 20;
 	p1.fcry = 0;
-	try { cardGame.collection("decks").find({name: deck.value}).then(docs => {
+	try { cardGame.collection("decks").find({name: deck.value}).asArray().then(docs => {
 		docs.map(deck => {
 		p1.deck = deck.cards;
 		p1.hand = deck.starter;
@@ -521,7 +521,7 @@ function sendMessage(message) {
 }
 
 function showMessages() {
-	cardGame.collection("logs").find({}).then(docs => {
+	cardGame.collection("logs").find({}).asArray().then(docs => {
 		var html = docs.map(m => "<div>" + m.message + "</div>").join("");
 		document.getElementById("chatLog").innerHTML = html;
 	});
