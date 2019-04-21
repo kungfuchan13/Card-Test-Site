@@ -1,8 +1,8 @@
 <head>
-	<script src="https://s3.amazonaws.com/stitch-sdks/js/library/stable/stitch.min.js"></script>
+	<script src="https://s3.amazonaws.com/stitch-sdks/js/bundles/4.3.1/stitch.js"></script>
 	<script>
-	const client = new stitch.StitchClient('card-game-test-wudbg');
-	const cardGame = client.service('mongodb', 'mongodb-atlas').db('card-game');
+	const client = stitch.Stitch.initializeDefaultAppClient("card-game-test-wudbg");
+	const cardGame = client.getServiceClient(stitch.RemoteMongoClient.factory, "mongodb-atlas").db('card-game');
 
   function removePlayer() {
     var thePlayer = document.getElementById("thePlayer");
@@ -11,7 +11,7 @@
 
 	function fillPlayerList() {
 		var list = document.getElementById("deckList");
-		cardGame.collection('players').find({}).then(docs => {
+		cardGame.collection('players').find({}).asArray().then(docs => {
 			var html = docs.map(p => "<div onclick='document.getElementById("+'"thePlayer"'+").value=this.innerHTML;' onmouseover='this.style.backgroundColor="+'"#aaa"'+";'onmouseout='this.style.backgroundColor="+'"#fff"'+";'>" + p.name + "</div>").join("");
 			document.getElementById("playerList").innerHTML = html;
 		});
@@ -20,7 +20,7 @@
 </head>
 
 <html>
-<body onload="client.login().then(fillPlayerList);">
+<body onload="client.auth.loginWithCredential(new stitch.AnonymousCredential()).then(fillPlayerList);">
 Players:
 <input id="thePlayer">
 <input type="button" value="Remove" onblur="this.value='Remove';" onclick="
